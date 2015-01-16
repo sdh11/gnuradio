@@ -37,9 +37,10 @@ class AppController(object):
 
         # Need to setup the slots for the QtAction
         self.log.debug("Creating MainWindow controller")
-        self.mainwindow = controllers.MainWindow()
+        self.MainWindow = controllers.MainWindow()
 
-        self.reports = controllers.Reports()
+        self.Reports = controllers.Reports()
+        self.BlockLibrary = controllers.BlockLibrary()
 
     # Global registration functions
     #  - Handles the majority of child controller interaciton
@@ -52,7 +53,7 @@ class AppController(object):
         # TODO: Setup the system to automatically add new "Show <View Name>" menu items when a new
         # dock widget is added.
         self.log.debug("Registering widget ({0}, {1})".format(widget.__class__.__name__, location))
-        self.mainwindow.registerDockWidget(location, widget)
+        self.MainWindow.registerDockWidget(location, widget)
 
     def registerMenu(self, menu):
         ''' Allows child controllers to register an a menu rather than just a single action '''
@@ -65,7 +66,7 @@ class AppController(object):
         #  - Possibly view sidebars and toolbars as submenu
         #  - Have the ability to create an entirely new menu
         self.log.debug("Registering menu ({0})".format(menu.title()))
-        self.mainwindow.registerMenu(menu)
+        self.MainWindow.registerMenu(menu)
 
     def registerAction(self, action, menu):
         ''' Allows child controllers to register a global action shown in the main window '''
@@ -75,7 +76,7 @@ class AppController(object):
         ''' Launches the main QT event loop '''
 
         # Show the main window after everything is initialized.
-        self.mainwindow.show()
+        self.MainWindow.show()
 
         # Launch the qt app
         return (self._app.exec_())

@@ -3,6 +3,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 # GRC imports
 from .. import base
 
+# Shortcuts
+Action = QtWidgets.QAction
+Menu = QtWidgets.QMenu
+Toolbar = QtWidgets.QToolBar
+Icons = QtGui.QIcon.fromTheme
+Keys = QtGui.QKeySequence
+
 
 class Reports(QtWidgets.QDockWidget, base.View):
     """ GRC.Views.Reports """
@@ -37,15 +44,10 @@ class Reports(QtWidgets.QDockWidget, base.View):
         layout.addWidget(text)
         self.setWidget(contents)
 
-        self.createMenus(self.actions, self.menus)
-
     def createActions(self, actions):
         """ Defines all actions for this view. """
 
         self.log.debug("Creating actions")
-        Action = QtWidgets.QAction
-        Icons = QtGui.QIcon.fromTheme
-        Keys = QtGui.QKeySequence
 
         # File Actions
         actions['save'] = Action(Icons("document-save"), _("save"), self,
@@ -68,30 +70,3 @@ class Reports(QtWidgets.QDockWidget, base.View):
 
     def createToolbars(self, actions, toolbars):
         self.log.debug("Creating toolbars")
-
-        # Main toolbar
-        '''file = self.addToolBar("file")
-        file.addAction(actions['new'])
-        file.addAction(actions['open'])
-        file.addAction(actions['save'])
-        file.addAction(actions['close'])
-        file.addAction(actions['print'])
-        toolbars['file'] = file
-
-        # Edit toolbar
-        edit = self.addToolBar("edit")
-        edit.addAction(actions['cut'])
-        edit.addAction(actions['copy'])
-        edit.addAction(actions['paste'])
-        edit.addAction(actions['delete'])
-        edit.addSeparator()
-        edit.addAction(actions['rotate_ccw'])
-        edit.addAction(actions['rotate_cw'])
-        toolbars['edit'] = edit
-
-        # Run Toolbar
-        run = self.addToolBar("run")
-        run.addAction(actions['generate'])
-        run.addAction(actions['execute'])
-        run.addAction(actions['kill'])
-        toolbars['run'] = run'''

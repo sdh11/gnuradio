@@ -101,7 +101,7 @@ class Window(object):
     ADVANCED_PARAM_TAB = 'Advanced'
 
     REPORTS_DOCK_LOCATION = 8
-    BLOCKS_DOCK_LOCATION = 1
+    BLOCK_LIBRARY_DOCK_LOCATION = 1
 
     # Define the top level menus.
     # This does not actually define the menus; it simply defines a list of constants that

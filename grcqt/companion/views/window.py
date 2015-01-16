@@ -1,5 +1,6 @@
 import os
 import sys
+from PyQt5.Qt import Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .. import base
@@ -10,6 +11,7 @@ Menu = QtWidgets.QMenu
 Toolbar = QtWidgets.QToolBar
 Icons = QtGui.QIcon.fromTheme
 Keys = QtGui.QKeySequence
+
 
 class MainWindow(QtWidgets.QMainWindow, base.View):
     """
@@ -37,6 +39,8 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         self.log.debug("Setting window size")
         screen = QtWidgets.QDesktopWidget().availableGeometry()
         self.resize(screen.width() * 0.40, screen.height())
+
+        self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
 
         self.menuBar().setNativeMenuBar(self.gp.window.NATIVE_MENUBAR)
 
