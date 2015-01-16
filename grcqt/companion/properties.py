@@ -100,6 +100,21 @@ class Window(object):
     DEFAULT_PARAM_TAB = 'General'
     ADVANCED_PARAM_TAB = 'Advanced'
 
+    REPORTS_DOCK_LOCATION = 8
+    BLOCKS_DOCK_LOCATION = 1
+
+    # Define the top level menus.
+    # This does not actually define the menus; it simply defines a list of constants that
+    # to be used as keys for the actual menu dictionaries
+    class menus(object):
+        FILE = "file"
+        EDIT = "edit"
+        VIEW = "view"
+        BUILD = "build"
+        TOOLS = "tools"
+        #PLUGINS = "plugins"
+        HELP = "help"
+
 
 class FlowGraph(object):
     """ Flow graph specific properites """

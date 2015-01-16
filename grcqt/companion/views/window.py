@@ -4,6 +4,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from .. import base
 
+# Shortcuts
+Action = QtWidgets.QAction
+Menu = QtWidgets.QMenu
+Toolbar = QtWidgets.QToolBar
+Icons = QtGui.QIcon.fromTheme
+Keys = QtGui.QKeySequence
 
 class MainWindow(QtWidgets.QMainWindow, base.View):
     """
@@ -38,10 +44,6 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         #self.setDocumentMode(True)
 
         # Generate the rest of the window
-        self.menus = {}
-        self.toolbars = {}
-        self.createMenus()
-        self.createToolbars()
         self.createStatusBar()
 
         #actions['Quit.triggered.connect(self.close)
@@ -51,12 +53,9 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
     def createActions(self, actions):
         """
         Defines all actions for this view.
-        Controller uses the QT to connect actions to handlers
+        Controller manages connecting signals to slots implemented in the controller
         """
         self.log.debug("Creating actions")
-        Action = QtWidgets.QAction
-        Icons = QtGui.QIcon.fromTheme
-        Keys = QtGui.QKeySequence
 
         # File Actions
         actions['new'] = Action(Icons("document-new"), _("new"), self,
@@ -143,10 +142,6 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
 
         actions['types'] = Action("Types", self)
 
-        actions['library'] = Action("Library", self, shortcut="Ctrl+L",
-                                    statusTip=_("block-library-tooltip"), checkable=True)
-
-        actions['report'] = Action("Reports", self, checkable=True)
         actions['enable'] = Action("Enable", self)
         actions['disable'] = Action("Disable", self)
 
@@ -168,18 +163,15 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         actions['rotate_cw'].setEnabled(False)
         actions['errors'].setEnabled(False)
 
-    def createMenus(self):
+    def createMenus(self, actions, menus):
         """ Setup the main menubar for the application """
-
         self.log.debug("Creating menus")
-        actions = self.actions
-        menus = self.menus
 
         # Global menu options
         self.menuBar().setNativeMenuBar(True)
 
         # Setup the file menu
-        file = self.menuBar().addMenu("&File")
+        file = Menu("&File")
         file.addAction(actions['new'])
         file.addAction(actions['open'])
         file.addAction(actions['close'])
@@ -195,7 +187,7 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         menus['file'] = file
 
         # Setup the edit menu
-        edit = self.menuBar().addMenu("&Edit")
+        edit = Menu("&Edit")
         edit.addAction(actions['undo'])
         edit.addAction(actions['redo'])
         edit.addSeparator()
@@ -212,24 +204,33 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         edit.addAction(actions['properties'])
         menus['edit'] = edit
 
+        # Setup submenu
+        panels = Menu("&Panels")
+        menus['panels'] = panels
+        panels.setEnabled(False)
+
+        toolbars = Menu("&Toolbars")
+        menus['toolbars'] = toolbars
+        toolbars.setEnabled(False)
+
         # Setup the view menu
-        view = self.menuBar().addMenu("&View")
+        view = Menu("&View")
+        view.addMenu(panels)
+        view.addMenu(toolbars)
+        view.addSeparator()
         view.addAction(actions['errors'])
         view.addAction(actions['find'])
-        view.addSeparator()
-        view.addAction(actions['library'])
-        view.addAction(actions['report'])
         menus['view'] = view
 
         # Setup the build menu
-        build = self.menuBar().addMenu("&Build")
+        build = Menu("&Build")
         build.addAction(actions['generate'])
         build.addAction(actions['execute'])
         build.addAction(actions['kill'])
         menus['build'] = build
 
         # Setup the help menu
-        help = self.menuBar().addMenu("&Help")
+        help = Menu("&Help")
         help.addAction(actions['help'])
         help.addAction(actions['types'])
         help.addSeparator()
@@ -237,13 +238,11 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         help.addAction(actions['about_qt'])
         menus['help'] = help
 
-    def createToolbars(self):
+    def createToolbars(self, actions, toolbars):
         self.log.debug("Creating toolbars")
-        toolbars = self.toolbars
-        actions = self.actions
 
         # Main toolbar
-        file = self.addToolBar("file")
+        file = Toolbar("File")
         file.addAction(actions['new'])
         file.addAction(actions['open'])
         file.addAction(actions['save'])
@@ -252,7 +251,7 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         toolbars['file'] = file
 
         # Edit toolbar
-        edit = self.addToolBar("edit")
+        edit = Toolbar("Edit")
         edit.addAction(actions['cut'])
         edit.addAction(actions['copy'])
         edit.addAction(actions['paste'])
@@ -263,7 +262,7 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
         toolbars['edit'] = edit
 
         # Run Toolbar
-        run = self.addToolBar("run")
+        run = Toolbar('Run')
         run.addAction(actions['generate'])
         run.addAction(actions['execute'])
         run.addAction(actions['kill'])
@@ -282,3 +281,33 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
                                filter='Flow Graph Files (*.grc);;All files (*.*)')
         return filename
 
+    # Overridden methods
+    def addDockWidget(self, location, widget):
+        """ Adds a dock widget to the view. """
+        # This overrides QT's addDockWidget so that a 'show' menu auto can automatically be
+        # generated for this action.
+        super().addDockWidget(location, widget)
+        # This is the only instance where a controller holds a reference to a view it does not
+        # actually control.
+        name = widget.__class__.__name__
+        self.log.debug("Generating show action item for widget: {0}".format(name))
+
+        # Create the new action and wire it to the show/hide for the widget
+        self.menus["panels"].addAction(widget.toggleViewAction())
+        self.menus['panels'].setEnabled(True)
+
+    def addToolBar(self, toolbar):
+        """ Adds a toolbar to the main window """
+        # This is also overridden so a show menu item can automatically be added
+        super().addToolBar(toolbar)
+        name = toolbar.windowTitle()
+        self.log.debug("Generating show action item for toolbar: {0}".format(name))
+
+        # Create the new action and wire it to the show/hide for the widget
+        self.menus["toolbars"].addAction(toolbar.toggleViewAction())
+        self.menus['toolbars'].setEnabled(True)
+
+    def addMenu(self, menu):
+        """ Adds a menu to the main window """
+        help = self.menus["help"].menuAction()
+        self.menuBar().insertMenu(help, menu)

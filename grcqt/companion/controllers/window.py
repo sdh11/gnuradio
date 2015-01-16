@@ -1,4 +1,5 @@
 import os
+from PyQt5 import QtCore
 
 # GRC imports
 from .. import views, base
@@ -12,10 +13,28 @@ class MainWindow(base.Controller):
         super().__init__()
         self.setView(views.MainWindow)
 
+        # Map some of the view's functions to the controller class
+        self.registerDockWidget = self.view.addDockWidget
+        self.registerMenu = self.view.addMenu
+        self.registerToolBar = self.view.addToolBar
+
         # Do other initialization stuff. View should already be allocated and
         # actions dynamically connected to class functions. Also, the self.log
         # functionality should be also allocated
         self.log.debug("__init__")
+
+        # Add the menus from the view
+        menus = self.view.menus
+        self.registerMenu(menus["file"])
+        self.registerMenu(menus["edit"])
+        self.registerMenu(menus["view"])
+        self.registerMenu(menus["build"])
+        self.registerMenu(menus["help"])
+
+        toolbars = self.view.toolbars
+        self.registerToolBar(toolbars["file"])
+        self.registerToolBar(toolbars["edit"])
+        self.registerToolBar(toolbars["run"])
 
         self.log.debug("Loading flowgraph model")
         test_flowgraph = os.path.join(self.gp.path.INSTALL, 'companion/resources/data/rx_logo.grc')

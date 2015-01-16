@@ -30,8 +30,13 @@ class Controller(object):
         """
         # Need to use a weak references for the app controller due to circular references.
         # Otherwise the python gc will not correctly recover objects
-        cls.app = weakref.ref(app)
+        cls.appRef = weakref.ref(app)
         cls.gp = gp
+
+    @property
+    def app(self):
+        """ Returns a referent for the weakref to the app controller"""
+        return self.appRef()
 
     # Controller setup functions
     def setView(self, view):
@@ -103,7 +108,8 @@ class Controller(object):
                     self.log.error("Class cannot handle <{0}.triggered>".format(key))
 
     def notImplemented(self):
-        self.log.debug('Not implemented')
+        self.log.warning('Not implemented')
+
 
 class View(object):
     """ Abstract base class for all grc views. """
@@ -119,15 +125,28 @@ class View(object):
         self.log = logging.getLogger(name)
         self.log.debug("Using default logger - {0}".format(name))
 
-        # Setup the view's actions.
-        # createActions() Must be implemented by child view
-        self.log.debug("Creating actions")
+        # Automatically create the actions, menus and toolbars.
+        # Child controllers need to call the register functions to integrate into the mainwindow
         self.actions = {}
+        self.menus = {}
+        self.toolbars = {}
         self.createActions(self.actions)
+        self.createMenus(self.actions, self.menus)
+        self.createToolbars(self.actions, self.toolbars)
 
     # Required methods
     @abc.abstractmethod
     def createActions(self, actions):
+        """ Add actions to the view. """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def createMenus(self, actions, menus):
+        """ Add actions to the view. """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def createToolbars(self, actions, toolbars):
         """ Add actions to the view. """
         raise NotImplementedError()
 
