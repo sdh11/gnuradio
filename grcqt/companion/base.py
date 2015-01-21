@@ -47,7 +47,7 @@ class Controller(object):
 
         # Dynamically build connection for the available signals
         self.log.debug("Connecting signals")
-        self.connectSlots(self, self.view.actions)
+        self.connectSlots()
 
     # Base methods
     def setLogger(self, loggerName):
@@ -83,7 +83,7 @@ class Controller(object):
             if useToggled and actions[key].isCheckable():
                 # Try to use toggled rather than triggered
                 try:
-                    handler = key + toggledHander
+                    handler = key + toggledHandler
                     actions[key].toggled.connect(getattr(self, handler))
                     self.log.debug("<{0}.toggled> connected to handler <{1}>".format(key, handler))
                     # Successful connection. Jump to the next action.

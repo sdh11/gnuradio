@@ -10,7 +10,6 @@ class BlockLibrary(QtWidgets.QDockWidget, base.View):
     def __init__(self):
         super().__init__()
         self.log.debug("__init__")
-
         self.setObjectName("blocklibrary")
         self.setWindowTitle("Block Library")
 

@@ -73,4 +73,3 @@ and you are welcome to redistribute it.
     try: gtk.window_set_default_icon(gtk.IconTheme().load_icon('gnuradio-grc', 256, 0))
     except: pass
     ActionHandler(args, Platform())
-

@@ -38,7 +38,7 @@ class MainWindow(QtWidgets.QMainWindow, base.View):
 
         self.log.debug("Setting window size")
         screen = QtWidgets.QDesktopWidget().availableGeometry()
-        self.resize(screen.width() * 0.40, screen.height())
+        self.resize(screen.width() * 0.50, screen.height())
 
         self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
 
