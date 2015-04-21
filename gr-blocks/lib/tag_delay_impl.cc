@@ -25,6 +25,7 @@
 #endif
 
 #include "tag_delay_impl.h"
+#include <stdio.h>
 #include <gnuradio/io_signature.h>
 #include <boost/thread/thread.hpp>
 
@@ -62,7 +63,7 @@ namespace gr {
                         gr_vector_void_star &output_items)
     {
       if (d_sleep) {
-        boost::this_thread::sleep(boost::posix_time::microseconds(d_delay));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(d_delay));
         d_sleep = false;
       }
 
@@ -71,13 +72,36 @@ namespace gr {
 
       // Get all the input tags
       std::vector<tag_t> tags;
-      get_tags_in_window(tags, 0, nitems_read(0), nitems_read(0) + noutput_items);
+      get_tags_in_range(tags, 0, nitems_read(0), nitems_read(0) + noutput_items);
 
       if (tags.size() > 0) {
-        int offset = tags[0].offset - nitems_read(0);
-        std::memcpy(out, in, offset * d_itemsize);
-        d_sleep = true;
-        return offset;
+        unsigned long offset = tags[0].offset - nitems_read(0);
+        //printf("Tag offset - %lu\n", tags[0].offset);
+        //printf("items read %lu\n", nitems_read(0));
+        //printf("offset = %lu\n", offset);
+
+        // Check the location and number of tags
+        if (offset > 0) {
+          //printf("Offset > 0; Sending %d items\n", offset);
+          // Number of tags doesn't matter. Only send up to the first tag
+          std::memcpy(out, in, offset * d_itemsize);
+          d_sleep = true;
+          return offset;
+        } else if (offset == 0 && tags.size() == 1) {
+          //printf("Tag is aligned to 0. Single tag. Sending %d items\n", noutput_items);
+          // This is the only tag and it's aligned, which means it was delayed.
+          // Send everything.
+          std::memcpy(out, in, noutput_items * d_itemsize);
+          return noutput_items;
+        } else {
+          // Tag is aligned, but there are more than one in the buffer.
+          // Send everything until the next tag, then sleep.
+          offset = tags[1].offset - nitems_read(0);
+          //printf("Tag is aligned, but more than one tag. Sending %d items\n", offset);
+          std::memcpy(out, in, offset * d_itemsize);
+          d_sleep = true;
+          return offset;
+        }
       } else {
         std::memcpy(out, in, noutput_items * d_itemsize);
         return noutput_items;

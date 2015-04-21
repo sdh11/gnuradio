@@ -33,7 +33,7 @@ namespace gr {
     private:
       size_t d_itemsize;
       int d_delay;
-      bool d_sleep; // True when a tag has been found.
+      bool d_sleep;   // True when a tag has been found.
 
     public:
       tag_delay_impl(size_t itemsize, int delay);
