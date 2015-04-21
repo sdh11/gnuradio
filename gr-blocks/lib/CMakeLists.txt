@@ -187,6 +187,7 @@ list(APPEND gr_blocks_sources
     transcendental_impl.cc
     tcp_connection.cc
     tuntap_pdu_impl.cc
+    tag_delay_impl.cc
     tag_gate_impl.cc
     tagged_stream_align_impl.cc
     tagged_stream_mux_impl.cc

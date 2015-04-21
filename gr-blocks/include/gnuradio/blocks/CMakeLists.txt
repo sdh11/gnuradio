@@ -160,6 +160,7 @@ install(FILES
     stretch_ff.h
     sub_ff.h
     tag_debug.h
+    tag_delay.h
     tag_gate.h
     tagged_file_sink.h
     tagged_stream_align.h
