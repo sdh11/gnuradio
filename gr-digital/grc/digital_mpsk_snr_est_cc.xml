@@ -7,6 +7,7 @@
 <block>
 	<name>MPSK SNR Estimator</name>
 	<key>digital_mpsk_snr_est_cc</key>
+	<tags>phase shift keying</tags>
 	<import>from gnuradio import digital</import>
 	<make>digital.mpsk_snr_est_cc($type, $tag_nsamples, $alpha)</make>
 	<callback>set_type($type)</callback>

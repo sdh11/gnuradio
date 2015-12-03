@@ -217,7 +217,7 @@ class BlockTreeWindow(gtk.VBox):
             # the search string
             def search(block):
                 words = [block.get_name(), block.get_key(),
-                         block.get_category()] #, block.get_tags()]
+                         block.get_category(), block.get_tags()]
                 for key in keys:
                     if not any(key in word.lower() for word in words):
                         return False

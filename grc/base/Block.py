@@ -82,6 +82,7 @@ class Block(Element):
         self._key = n.find('key')
         self._category = n.find('category') or ''
         self._flags = n.find('flags') or ''
+        self._tags = n.find('tags') or ''
         # Backwards compatibility
         if n.find('throttle') and BLOCK_FLAG_THROTTLE not in self._flags:
             self._flags += BLOCK_FLAG_THROTTLE
@@ -320,6 +321,7 @@ class Block(Element):
     def get_comment(self): return self.get_param('comment').get_value()
 
     def get_flags(self): return self._flags
+    def get_tags(self): return self._tags
     def throtteling(self): return BLOCK_FLAG_THROTTLE in self._flags
     def bypass_disabled(self): return BLOCK_FLAG_DISABLE_BYPASS in self._flags
 
