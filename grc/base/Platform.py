@@ -216,7 +216,7 @@ class Platform(_Element):
                 block = self.get_block(block_key)
                 #if it exists, the block's category shall not be overridden by the xml tree
                 if not block.get_category():
-                    block.set_category(parent)
+                    block.set_category('/'.join(c for c in parent if c))
 
         # recursively load the category trees and update the categories for each block
         for category_tree_n in self._category_trees_n:

@@ -94,6 +94,7 @@ class BlockTreeWindow(gtk.VBox):
         # setup sort order
         column.set_sort_column_id(0)
         self.treestore.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        self.treestore_search.set_sort_column_id(0, gtk.SORT_ASCENDING)
         # setup drag and drop
         self.treeview.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, DND_TARGETS, gtk.gdk.ACTION_COPY)
         self.treeview.connect('drag-data-get', self._handle_drag_get_data)
@@ -205,13 +206,25 @@ class BlockTreeWindow(gtk.VBox):
             self.search_entry.hide()
 
     def _update_search_tree(self, widget):
-        key = widget.get_text().lower()
-        if not key:
+        # Strip the whitespace from the keys and split into specific words
+        keys = widget.get_text().lower().strip().split(' ')
+
+        if not keys[0]:
             self.treeview.set_model(self.treestore)
             self.treeview.collapse_all()
         else:
+            # Search the block name, key and category using all the words in
+            # the search string
+            def search(block):
+                words = [block.get_name(), block.get_key(),
+                         block.get_category()] #, block.get_tags()]
+                for key in keys:
+                    if not any(key in word.lower() for word in words):
+                        return False
+                return True
+
             blocks = self.get_flow_graph().get_parent().get_blocks()
-            matching_blocks = filter(lambda b: key in b.get_key().lower() or key in b.get_name().lower(), blocks)
+            matching_blocks = filter(search, blocks)
 
             self.treestore_search.clear()
             self._categories_search = {tuple(): None}

@@ -310,6 +310,7 @@ class Block(Element):
     def get_key(self): return self._key
     def get_category(self): return self._category
     def set_category(self, cat): self._category = cat
+
     def get_doc(self): return ''
     def get_ports(self): return self.get_sources() + self.get_sinks()
     def get_ports_gui(self): return self.filter_bus_port(self.get_sources()) + self.filter_bus_port(self.get_sinks());
