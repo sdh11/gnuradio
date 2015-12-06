@@ -26,8 +26,10 @@ from . import Actions, Utils
 from .Constants import DEFAULT_BLOCKS_WINDOW_WIDTH, DND_TARGETS
 
 NAME_INDEX = 0
-KEY_INDEX = 1
-DOC_INDEX = 2
+CATEGORY_INDEX = 1
+KEY_INDEX = 2
+DOC_INDEX = 3
+SORT_INDEX = 4
 
 DOC_MARKUP_TMPL = """\
 #if $doc
@@ -71,10 +73,15 @@ class BlockTreeWindow(gtk.VBox):
         self.pack_start(self.search_entry, False)
 
         # make the tree model for holding blocks and a temporary one for search results
-        self.treestore = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
-        self.treestore_search = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.treestore = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
+                                       gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_INT)
+        self.treestore.set_sort_column_id(NAME_INDEX, gtk.SORT_ASCENDING)
+        self.treestore_search = gtk.TreeStore(gobject.TYPE_STRING, gobject.TYPE_STRING,
+                                       gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_INT)
+        self.treestore_search.set_sort_column_id(SORT_INDEX, gtk.SORT_DESCENDING)
 
         self.treeview = gtk.TreeView(self.treestore)
+        self.treeview.get_selection().set_mode('single')
         self.treeview.set_enable_search(False)  # disable pop up search box
         self.treeview.set_search_column(-1)  # really disable search
         self.treeview.set_headers_visible(False)
@@ -82,28 +89,32 @@ class BlockTreeWindow(gtk.VBox):
         self.treeview.connect('button-press-event', self._handle_mouse_button_press)
         self.treeview.connect('key-press-event', self._handle_search_key_press)
 
-        self.treeview.get_selection().set_mode('single')
+        # Setup columns
         renderer = gtk.CellRendererText()
-        column = gtk.TreeViewColumn('Blocks', renderer, text=NAME_INDEX)
-        self.treeview.append_column(column)
+        name_column = gtk.TreeViewColumn('Block', renderer, text=NAME_INDEX)
+        self.treeview.append_column(name_column)
+
         # try to enable the tooltips (available in pygtk 2.12 and above)
         try:
             self.treeview.set_tooltip_column(DOC_INDEX)
         except:
             pass
+
         # setup sort order
-        column.set_sort_column_id(0)
-        self.treestore.set_sort_column_id(0, gtk.SORT_ASCENDING)
-        self.treestore_search.set_sort_column_id(0, gtk.SORT_ASCENDING)
+        self.treestore.set_sort_column_id(NAME_INDEX, gtk.SORT_ASCENDING)
+        self.treestore_search.set_sort_column_id(SORT_INDEX, gtk.SORT_DESCENDING)
+
         # setup drag and drop
         self.treeview.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, DND_TARGETS, gtk.gdk.ACTION_COPY)
         self.treeview.connect('drag-data-get', self._handle_drag_get_data)
+
         # make the scrolled window to hold the tree view
         scrolled_window = gtk.ScrolledWindow()
         scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
         scrolled_window.add_with_viewport(self.treeview)
         scrolled_window.set_size_request(DEFAULT_BLOCKS_WINDOW_WIDTH, -1)
         self.pack_start(scrolled_window)
+
         # map categories to iters, automatic mapping for root
         self._categories = {tuple(): None}
         self._categories_search = {tuple(): None}
@@ -118,7 +129,7 @@ class BlockTreeWindow(gtk.VBox):
     ############################################################
     ## Block Tree Methods
     ############################################################
-    def add_block(self, category, block=None, treestore=None, categories=None):
+    def add_block(self, category, block=None, treestore=None, categories=None, sort=0, show_categories=True):
         """
         Add a block with category to this selection window.
         Add only the category when block is None.
@@ -130,23 +141,38 @@ class BlockTreeWindow(gtk.VBox):
         if treestore is None: treestore = self.treestore
         if categories is None: categories = self._categories
 
-        if isinstance(category, (str, unicode)): category = category.split('/')
-        category = tuple(filter(lambda x: x, category))  # tuple is hashable
-        # add category and all sub categories
-        for i, cat_name in enumerate(category):
-            sub_category = category[:i+1]
-            if sub_category not in categories:
-                iter = treestore.insert_before(categories[sub_category[:-1]], None)
-                treestore.set_value(iter, NAME_INDEX, '[ %s ]'%cat_name)
-                treestore.set_value(iter, KEY_INDEX, '')
-                treestore.set_value(iter, DOC_INDEX, Utils.parse_template(CAT_MARKUP_TMPL, cat=cat_name))
-                categories[sub_category] = iter
+        if show_categories:
+            if isinstance(category, (str, unicode)):
+                category = category.split('/')
+            category = tuple(filter(lambda x: x, category))  # tuple is hashable
+            # add category and all sub categories
+            for i, cat_name in enumerate(category):
+                sub_category = category[:i+1]
+                if sub_category not in categories:
+                    iter = treestore.insert_before(categories[sub_category[:-1]], None)
+                    treestore.set_value(iter, NAME_INDEX, '[ %s ]'%cat_name)
+                    treestore.set_value(iter, KEY_INDEX, '')
+                    treestore.set_value(iter, DOC_INDEX, Utils.parse_template(CAT_MARKUP_TMPL, cat=cat_name))
+                    treestore.set_value(iter, SORT_INDEX, 0)
+                    categories[sub_category] = iter
         # add block
-        if block is None: return
-        iter = treestore.insert_before(categories[category], None)
-        treestore.set_value(iter, NAME_INDEX, block.get_name())
-        treestore.set_value(iter, KEY_INDEX, block.get_key())
-        treestore.set_value(iter, DOC_INDEX, Utils.parse_template(DOC_MARKUP_TMPL, doc=block.get_doc()))
+        if block is None:
+            return
+
+        sort = 0
+        if isinstance(block, tuple):
+            sort = block[1]
+            block = block[0]
+
+        if show_categories:
+            iter = treestore.insert_before(categories[category], None)
+            treestore.set_value(iter, NAME_INDEX, block.get_name())
+            treestore.set_value(iter, KEY_INDEX, block.get_key())
+            treestore.set_value(iter, DOC_INDEX, Utils.parse_template(DOC_MARKUP_TMPL, doc=block.get_doc()))
+            treestore.set_value(iter, SORT_INDEX, sort)
+        else:
+            treestore.append(None, (block.get_name(), block.get_category(), block.get_key(),
+                             Utils.parse_template(DOC_MARKUP_TMPL, doc=block.get_doc()), sort))
 
     def update_docs(self):
         """Update the documentation column of every block"""
@@ -213,24 +239,24 @@ class BlockTreeWindow(gtk.VBox):
             self.treeview.set_model(self.treestore)
             self.treeview.collapse_all()
         else:
-            # Search the block name, key and category using all the words in
-            # the search string
+            # Search the block name, key and category using all the words in the string
             def search(block):
                 words = [block.get_name(), block.get_key(),
                          block.get_category(), block.get_tags()]
+                freq = 0
                 for key in keys:
-                    if not any(key in word.lower() for word in words):
-                        return False
-                return True
+                    freq = sum((word.lower().count(key) for word in words), freq)
+                return freq
 
             blocks = self.get_flow_graph().get_parent().get_blocks()
-            matching_blocks = filter(search, blocks)
+            matching_blocks = filter(lambda x: x[1] > 0, zip(blocks, map(search, blocks)))
 
             self.treestore_search.clear()
             self._categories_search = {tuple(): None}
             for block in matching_blocks:
-                self.add_block(block.get_category() or 'None', block,
-                               self.treestore_search, self._categories_search)
+                # Add block without categories. This is not the best way to do this.
+                self.add_block(block[0].get_category() or 'None', block,
+                               self.treestore_search, self._categories_search, show_categories=False)
             self.treeview.set_model(self.treestore_search)
             self.treeview.expand_all()
 
