@@ -61,7 +61,7 @@ namespace gr {
     /*!
      * \brief return number of items worth of space available for writing
      */
-    int space_available();
+    virtual int space_available();
 
     /*!
      * \brief return size of this buffer in items
@@ -81,10 +81,12 @@ namespace gr {
      */
     void *write_pointer();
 
+    const int write_index();
+
     /*!
      * \brief tell buffer that we wrote \p nitems into it
      */
-    void update_write_pointer(int nitems);
+    virtual void update_write_pointer(int nitems);
 
     void set_done(bool done);
     bool done() const { return d_done; }
@@ -167,13 +169,24 @@ namespace gr {
     char                              *d_base;     // base address of buffer
     unsigned int                       d_bufsize;  // in items
     size_t                             d_sizeof_item;  // in bytes
+    uint64_t                        d_abs_write_offset; // num items written since the start
 
     // Keep track of maximum sample delay of any reader; Only prune tags past this.
     unsigned d_max_reader_delay;
 
+    // Increment the index by the given number of items
+    virtual unsigned add_index(unsigned index, unsigned items);
+    virtual unsigned subtract_index(unsigned index, unsigned items);
+
+    // Given an index, determine how many items can be read
+    virtual unsigned items_available(unsigned index, uint64_t total_items);
+
+    std::vector<buffer_reader *>  d_readers;
+    uint64_t                        d_last_min_items_read;
+    unsigned int                    d_write_index;	// in items [0,d_bufsize)
+
   private:
     gr::vmcircbuf                *d_vmcircbuf;
-    std::vector<buffer_reader *>  d_readers;
     boost::weak_ptr<block>        d_link;         // block that writes to this buffer
 
     //
@@ -181,33 +194,9 @@ namespace gr {
     // and the d_read_index's and d_abs_read_offset's in the buffer readers.
     //
     gr::thread::mutex               d_mutex;
-    unsigned int                    d_write_index;	// in items [0,d_bufsize)
-    uint64_t                        d_abs_write_offset; // num items written since the start
+
     bool                            d_done;
     std::multimap<uint64_t,tag_t>   d_item_tags;
-    uint64_t                        d_last_min_items_read;
-
-    unsigned index_add(unsigned a, unsigned b)
-    {
-      unsigned s = a + b;
-
-      if(s >= d_bufsize)
-        s -= d_bufsize;
-
-      assert(s < d_bufsize);
-      return s;
-    }
-
-    unsigned index_sub(unsigned a, unsigned b)
-    {
-      int s = a - b;
-
-      if(s < 0)
-        s += d_bufsize;
-
-      assert((unsigned) s < d_bufsize);
-      return s;
-    }
 
     /*!
      * \brief disassociate \p reader from this buffer
@@ -277,7 +266,8 @@ namespace gr {
      *
      * The return value points to items_available() number of items
      */
-    const void *read_pointer();
+    const void * read_pointer();
+    const int read_index();
 
     /*
      * \brief tell buffer we read \p items from it

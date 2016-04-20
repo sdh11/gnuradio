@@ -101,6 +101,34 @@ namespace gr {
     s_buffer_count--;
   }
 
+  unsigned buffer::add_index(unsigned index, unsigned items)
+  {
+    unsigned next = index + items;
+
+    if(next >= d_bufsize)
+      next -= d_bufsize;
+
+    assert(next < d_bufsize);
+    return next;
+  }
+
+  unsigned buffer::subtract_index(unsigned index, unsigned items)
+  {
+    int next = index - items;
+
+    if(next < 0)
+      next += d_bufsize;
+
+    assert((unsigned) next < d_bufsize);
+    return next;
+  }
+
+  unsigned buffer::items_available(unsigned index, uint64_t total_items)
+  {
+    // Calculates the number of items that are avaliable based on the buffer's write index
+    return subtract_index(d_write_index, index);
+  }
+
   /*!
    * sets d_vmcircbuf, d_base, d_bufsize.
    * returns true iff successful.
@@ -179,11 +207,15 @@ namespace gr {
     return &d_base[d_write_index * d_sizeof_item];
   }
 
+  const int buffer::write_index() {
+    return d_write_index;
+  }
+
   void
   buffer::update_write_pointer(int nitems)
   {
     gr::thread::scoped_lock guard(*mutex());
-    d_write_index = index_add(d_write_index, nitems);
+    d_write_index = add_index(d_write_index, nitems);
     d_abs_write_offset += nitems;
   }
 
@@ -201,7 +233,7 @@ namespace gr {
       throw std::invalid_argument("buffer_add_reader: nzero_preload must be >= 0");
 
     buffer_reader_sptr r(new buffer_reader(buf,
-                                           buf->index_sub(buf->d_write_index,
+                                           buf->subtract_index(buf->d_write_index,
                                            nzero_preload),
                                            link));
     r->declare_sample_delay(delay);
@@ -295,7 +327,6 @@ namespace gr {
       d_attr_delay(0)
   {
     s_buffer_reader_count++;
-
     buffer->d_max_reader_delay = 0;
   }
 
@@ -322,7 +353,8 @@ namespace gr {
   int
   buffer_reader::items_available() const
   {
-    return d_buffer->index_sub(d_buffer->d_write_index, d_read_index);
+    unsigned int val = d_buffer->items_available(d_read_index, d_abs_read_offset);
+    return val;
   }
 
   const void *
@@ -331,11 +363,15 @@ namespace gr {
     return &d_buffer->d_base[d_read_index * d_buffer->d_sizeof_item];
   }
 
+  const int buffer_reader::read_index() {
+    return d_read_index;
+  }
+
   void
   buffer_reader::update_read_pointer(int nitems)
   {
     gr::thread::scoped_lock guard(*mutex());
-    d_read_index = d_buffer->index_add (d_read_index, nitems);
+    d_read_index = d_buffer->add_index(d_read_index, nitems);
     d_abs_read_offset += nitems;
   }
 
