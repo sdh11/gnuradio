@@ -324,10 +324,10 @@ class Application(Gtk.Application):
 
                         # Set flow graph to heir block type
                         top_block  = flow_graph.get_block("top_block")
-                        top_block.get_param('generate_options').set_value('hb')
+                        top_block.params['generate_options'].set_value('hb')
 
                         # this needs to be a unique name
-                        top_block.get_param('id').set_value('new_heir')
+                        top_block.params['id'].set_value('new_heir')
 
                         # Remove the default samp_rate variable block that is created
                         remove_me  = flow_graph.get_block("samp_rate")
@@ -339,7 +339,7 @@ class Application(Gtk.Application):
                         for param in params:
                             param_id = flow_graph.add_new_block('parameter',(x_pos,10))
                             param_block = flow_graph.get_block(param_id)
-                            param_block.get_param('id').set_value(param)
+                            param_block.params['id'].set_value(param)
                             x_pos = x_pos + 100
 
                         for pad in pads:
