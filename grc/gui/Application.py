@@ -240,7 +240,7 @@ class Application(Gtk.Application):
         elif action == Actions.APPLICATION_QUIT:
             if main.close_pages():
                 Gtk.main_quit()
-                exit(0)
+                self.quit()
         ##################################################
         # Selections
         ##################################################

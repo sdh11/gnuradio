@@ -46,6 +46,7 @@ def main():
         description=VERSION_AND_DISCLAIMER_TEMPLATE % gr.version())
     parser.add_argument('flow_graphs', nargs='*')
     parser.add_argument('--log', choices=['debug', 'info', 'warning', 'error', 'critical'], default='warning')
+    parser.add_argument('--profile', "-p", action='store_true', default=False)
     args = parser.parse_args()
 
     try:
@@ -73,6 +74,12 @@ def main():
 
     log.debug("Running main")
 
+    # If profiling is enabled, start it before importing everything
+    if args.profile:
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
+
     # Delay importing until the logging is setup
     # Otherwise, the decorators could not use logging.
     from .gui.Platform import Platform
@@ -89,4 +96,9 @@ def main():
     log.debug("Loading application")
     app = Application(args.flow_graphs, platform)
     log.debug("Running")
-    sys.exit(app.run())
+    status = app.run()
+
+    # Save all the stats from profiling
+    if args.profile:
+        pr.disable()
+        pr.dump_stats("grc-profile.stats")
