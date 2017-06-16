@@ -20,8 +20,8 @@ from __future__ import absolute_import, division
 import ast
 from collections import OrderedDict
 
-from ..core.io import yaml
-from . import xml
+from core.io import yaml
+import xml
 
 
 def from_xml(filename):

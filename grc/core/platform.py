@@ -141,18 +141,11 @@ class Platform(Element):
         self.connection_templates.clear()
         self._block_categories.clear()
 
-        # FIXME: remove this as soon as converter is stable
-        from ..converter import Converter
-        converter = Converter(self.config.block_paths, self.config.yml_block_cache)
-        converter.run()
-        logging.info('XML converter done.')
-
         for file_path in self._iter_files_in_block_path(path):
-            try:
-                data = converter.cache[file_path]
-            except KeyError:
-                with open(file_path, encoding='utf-8') as fp:
-                    data = yaml.safe_load(fp)
+            print (file_path)
+
+            with open(file_path, encoding='utf-8') as fp:
+                data = yaml.safe_load(fp)
 
             if file_path.endswith('.block.yml'):
                 loader = self.load_block_description

@@ -1,6 +1,7 @@
 
 def calculate(flowgraph):
     """ Determines the complexity of a flowgraph """
+    return "**Disabled** "  # Temporarily disabled
     dbal = 0
     for block in flowgraph.blocks:
         # Skip options block
@@ -27,7 +28,7 @@ def calculate(flowgraph):
         dbal += base * multi * sink_multi * source_multi
 
     blocks = float(len(flowgraph.blocks))
-    connections = float(len(flowgraph.connections))
+    connections = float(len(list(flowgraph.connections)))
     elements = blocks + connections
     disabled_connections = sum(not c.enabled for c in flowgraph.connections)
 

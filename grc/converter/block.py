@@ -28,8 +28,8 @@ from __future__ import absolute_import, division, print_function
 from collections import OrderedDict, defaultdict
 from itertools import chain
 
-from ..core.io import yaml
-from . import cheetah_converter, xml
+from core.io import yaml
+import cheetah_converter, xml
 
 current_file_format = 1
 reserved_block_keys = ('import', )  # todo: add more keys
