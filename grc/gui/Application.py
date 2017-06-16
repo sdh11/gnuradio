@@ -213,6 +213,7 @@ class Application(Gtk.Application):
             main.update_panel_visibility(main.CONSOLE, Actions.TOGGLE_CONSOLE_WINDOW.get_active())
             main.update_panel_visibility(main.VARIABLES, Actions.TOGGLE_FLOW_GRAPH_VAR_EDITOR.get_active())
 
+            # TODO: Check for YAML parser errors
             #if ParseXML.xml_failures:
             #    Messages.send_xml_errors_if_any(ParseXML.xml_failures)
             #    Actions.XML_PARSER_ERRORS_DISPLAY.set_enabled(True)
