@@ -20,7 +20,7 @@ from __future__ import absolute_import, print_function
 # Standard modules
 import logging
 
-import xml.etree.ElementTree as ET
+import yaml
 
 from ast import literal_eval
 
@@ -234,22 +234,23 @@ class Flowgraph(QtWidgets.QGraphicsView, base.Component): # added base.Component
         log.debug("Creating toolbars")
 
     def readFile(self, filename):
-        tree = ET.parse(filename)
-        root = tree.getroot()
-        blocks = {}
+        with open(filename, encoding='utf-8') as fp:
+            data = yaml.safe_load(fp)
 
-        for xml_block in tree.findall('block'):
-            attrib = {}
+        blocks = data['blocks']
+        data['options']['id'] = 'options'
+        data['options']['name'] = 'Options'
+        blocks.append(data['options'])
+
+        for yml_block in blocks:
             params = []
-            block_key = xml_block.find('key').text
+            attrib = {}
+            block_key = yml_block['id']
 
-            for param in xml_block.findall('param'):
-                key = param.find('key').text
-                value = param.find('value').text
-                if key.startswith('_'):
-                    attrib[key] = literal_eval(value)
-                else:
-                    params.append((key, value))
+            for key, val in yml_block['parameters'].items():
+                params.append((key, val))
+
+            attrib = yml_block['states']
 
             # Find block in tree so that we can pull out label
             try:

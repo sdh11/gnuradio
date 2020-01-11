@@ -127,7 +127,7 @@ class MainWindow(QtWidgets.QMainWindow, base.Component):
         self.registerToolBar(toolbars["run"])
 
         log.debug("Loading flowgraph model")
-        test_flowgraph = os.path.join(self.settings.path.INSTALL, 'gui_qt/resources/data/rx_logo.grc')
+        test_flowgraph = os.path.join(self.settings.path.INSTALL, 'gui_qt/resources/data/dial_tone.grc')
         self.flowgraph = Flowgraph(self, test_flowgraph)
         log.debug("Adding flowgraph view")
         self.new_tab(self.flowgraph)
