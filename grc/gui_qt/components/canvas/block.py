@@ -106,8 +106,8 @@ class Block(QtWidgets.QGraphicsItem):
         super(Block, self).__init__()
         self.__dict__.update(attrib)
         self.params = params
-        self.x = attrib['_coordinate'][0]
-        self.y = attrib['_coordinate'][1]
+        self.x = attrib['coordinate'][0]
+        self.y = attrib['coordinate'][1]
         self.width = 300 # default shouldnt matter, it will change immedaitely after the first paint
         self.block_key = block_key
         self.block_label = block_label
